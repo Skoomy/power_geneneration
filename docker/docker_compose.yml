@@ -77,14 +77,14 @@ services:
       - power_gen_network
     profiles:
       - training
-    # Uncomment the following lines if you have NVIDIA GPU support
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+  # Uncomment the following lines if you have NVIDIA GPU support
+  # deploy:
+  #   resources:
+  #     reservations:
+  #       devices:
+  #         - driver: nvidia
+  #           count: 1
+  #           capabilities: [gpu]
 
   # Optional: Database service for storing results
   postgres_db:

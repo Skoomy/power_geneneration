@@ -174,6 +174,28 @@ This optimization model is used in:
 3. **Economic analysis**: Evaluating the cost impact of different demand scenarios
 4. **Capacity planning**: Assessing the need for new generation capacity
 
+## Quick Start with Docker
+
+The easiest way to get started is using Docker:
+
+```bash
+# 1. Clone or navigate to the project directory
+cd power_geneneration
+
+# 2. Build and start the application
+./docker/run.sh build
+./docker/run.sh start
+
+# 3. Access Jupyter Lab
+# Open http://localhost:8888 in your browser
+# Token: power_generation_token
+
+# 4. Test the setup
+./docker/test_setup.sh
+```
+
+For detailed Docker usage, see [docker/README.md](docker/README.md).
+
 ## Implementation Architecture
 
 This project is organized into three main modules:
@@ -193,18 +215,53 @@ Implements demand forecasting using PyTorch Forecasting's Temporal Fusion Transf
 - Handles both known future inputs (weather) and unknown features
 
 ### 3. Optimizer (`src/optimizer/`)
-Solves the power generation scheduling problem using Pyomo:
+Power generation optimization (to be implemented):
 - **Deterministic optimization**: Basic MILP with fixed demand
-- **Robust optimization**: Handles demand uncertainty using Bertsimas-Sim approach
+- **Robust optimization**: Handles demand uncertainty
 - **Stochastic optimization**: Multiple scenario optimization with expected value
 - Integrates seamlessly with forecaster's confidence intervals
+
+## Docker Environment
+
+The framework includes a comprehensive Docker setup:
+
+### Available Services
+- **Main App**: Jupyter Lab environment for interactive development
+- **Development**: Container for development work
+- **Training**: Dedicated environment for model training
+- **Database**: PostgreSQL for data storage (optional)
+- **Cache**: Redis for caching (optional)
+- **Monitoring**: Grafana dashboards (optional)
+
+### Quick Commands
+```bash
+# Start main application
+./docker/run.sh start
+
+# Development environment
+./docker/run.sh dev
+
+# Training environment  
+./docker/run.sh train
+
+# Full stack with database
+./docker/run.sh full
+
+# Stop all services
+./docker/run.sh stop
+
+# View logs
+./docker/run.sh logs
+
+# Execute commands in container
+./docker/run.sh exec python example_usage.py
+```
 
 ## Usage Example
 
 ```python
 from src.feature_builder import FeatureBuilder
 from src.forecaster import DemandForecaster
-from src.optimizer import PowerOptimizer
 
 # 1. Feature Engineering
 fb = FeatureBuilder()
@@ -216,23 +273,25 @@ train_loader, val_loader = forecaster.prepare_data(features_df)
 forecaster.train(train_loader, val_loader)
 next_day_forecast = forecaster.predict_next_day(current_data)
 
-# 3. Power Optimization
+# 3. Power Optimization (example implementation)
 plants = {
     1: {'name': 'Plant 1', 'cost': 5, 'min_capacity': 20, 'max_capacity': 100},
     2: {'name': 'Plant 2', 'cost': 4, 'min_capacity': 30, 'max_capacity': 150},
     3: {'name': 'Plant 3', 'cost': 3, 'min_capacity': 40, 'max_capacity': 200}
 }
 
-optimizer = PowerOptimizer(plants)
-result = optimizer.optimize_robust(next_day_forecast, robustness_parameter=0.2)
-result.plot_schedule()
+# Simple optimization logic
+for hour_demand in next_day_forecast:
+    optimal_dispatch = optimize_generation(hour_demand, plants)
+    print(f"Hour demand: {hour_demand}, Dispatch: {optimal_dispatch}")
 ```
 
 ## Requirements
 
-- Python 3.8+
+Core dependencies (automatically installed in Docker):
+- Python 3.9+
 - PyTorch & PyTorch Lightning
 - pytorch-forecasting
-- Pyomo with solver (GLPK, Gurobi, or CPLEX)
 - pandas, numpy, scikit-learn
-- matplotlib for visualization
+- PuLP, CVXPy (for optimization)
+- Jupyter Lab for interactive development
