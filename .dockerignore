@@ -1,0 +1,72 @@
+# Docker-related files
+docker/
+Dockerfile
+docker-compose.yml
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Model files (large)
+*.pth
+*.pkl
+models/
+
+# Outputs
+outputs/
+results/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Data files (if large)
+# data/
+
+# Environment variables
+.env
+.env.local
+
+# Docker volumes
+postgres_data/
+redis_data/
+grafana_data/
