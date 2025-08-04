@@ -69,14 +69,14 @@ $$\min Z = 5x_1 + 4x_2 + 3x_3$$
 
 ### Constraints
 
-### 1. Demand Satisfaction Constraint
+#### 1. Demand Satisfaction Constraint
 Total power generated must meet or exceed client demand:
 
 $$\sum_{i \in I} x_i \geq D$$
 
 $$x_1 + x_2 + x_3 \geq D$$
 
-### 2. Minimum Production Constraints
+#### 2. Minimum Production Constraints
 If a plant is operational, it must produce at least its minimum output:
 
 $$x_i \geq M_i \cdot y_i, \quad \forall i \in I$$
@@ -86,7 +86,7 @@ Specifically:
 - $x_2 \geq 30y_2$
 - $x_3 \geq 40y_3$
 
-### 3. Maximum Capacity Constraints
+#### 3. Maximum Capacity Constraints
 Power generated cannot exceed capacity, and can only be positive if plant is on:
 
 $$x_i \leq C_i \cdot y_i, \quad \forall i \in I$$
@@ -96,11 +96,11 @@ Specifically:
 - $x_2 \leq 150y_2$
 - $x_3 \leq 200y_3$
 
-### 4. Variable Domain Constraints
+#### 4. Variable Domain Constraints
 - $x_i \geq 0, \quad \forall i \in I$ (non-negativity)
 - $y_i \in \{0, 1\}, \quad \forall i \in I$ (binary)
 
-## Complete Formulation
+### Complete Formulation
 
 $$\begin{align}
 \min \quad & Z = 5x_1 + 4x_2 + 3x_3 \\
@@ -115,28 +115,44 @@ $$\begin{align}
 & y_i \in \{0, 1\}, \quad i = 1, 2, 3
 \end{align}$$
 
-## Key Properties
+## Solution Properties and Insights
 
-### 1. **Coupling Constraints**
+### Coupling Constraints
 The constraints $M_i \cdot y_i \leq x_i \leq C_i \cdot y_i$ create a coupling between the continuous variables $x_i$ and binary variables $y_i$:
 - If $y_i = 0$, then $x_i = 0$ (plant is off)
 - If $y_i = 1$, then $M_i \leq x_i \leq C_i$ (plant operates within bounds)
 
-### 2. **Economic Dispatch Logic**
+### Economic Dispatch Logic
 The model automatically implements economic dispatch:
 - Plant 3 (cheapest) will be preferred when possible
 - Plant 2 will be used when Plant 3 alone is insufficient
 - Plant 1 (most expensive) will only be used when necessary
 
-### 3. **Feasibility Conditions**
+### Feasibility Conditions
 The problem is feasible if and only if:
 $$D \leq \sum_{i \in I} C_i = 100 + 150 + 200 = 450 \text{ MW}$$
 
-### 4. **Optimal Solution Structure**
+### Optimal Solution Structure
 For different demand levels:
 - If $D \leq 200$ MW: Only Plant 3 operates (if $D \geq 40$ MW)
 - If $200 < D \leq 350$ MW: Plants 2 and 3 operate
 - If $D > 350$ MW: All plants may need to operate
+
+## Data Components
+
+### Demand Forecasting Data
+
+The project includes historical demand data (`data/dataset_forecasting.csv`) with features:
+- **datetime**: Timestamp of the measurement
+- **temperature**: Ambient temperature (°C) - affects heating/cooling demand
+- **lumiere**: Light intensity - correlates with solar generation and lighting needs
+- **pluviometrie**: Rainfall (mm) - impacts renewable generation
+- **demande_chaleur**: Heat demand (MW) - the target variable for forecasting
+
+This data can be used to:
+1. Forecast future power demand based on weather conditions
+2. Plan unit commitment schedules in advance
+3. Optimize generation dispatch considering demand uncertainty
 
 ## Generalized Formulation
 
@@ -149,3 +165,25 @@ $$\begin{align}
 & x_i \geq 0, \quad \forall i \in \{1, ..., n\} \\
 & y_i \in \{0, 1\}, \quad \forall i \in \{1, ..., n\}
 \end{align}$$
+
+## Practical Applications
+
+This optimization model is used in:
+1. **Real-time dispatch**: Determining optimal generation levels every 5-15 minutes
+2. **Day-ahead planning**: Scheduling which units to commit for the next day
+3. **Economic analysis**: Evaluating the cost impact of different demand scenarios
+4. **Capacity planning**: Assessing the need for new generation capacity
+
+## Implementation Notes
+
+To solve this MILP problem, you can use:
+- **Python**: PuLP, Gurobi, CPLEX, or OR-Tools
+- **MATLAB**: intlinprog or Optimization Toolbox
+- **Julia**: JuMP with various solvers
+- **GAMS**: For large-scale industrial applications
+
+The model scales well up to hundreds of generators and can incorporate additional constraints such as:
+- Ramping limits (how fast plants can change output)
+- Transmission constraints
+- Environmental emissions limits
+- Reserve requirements for system reliability
