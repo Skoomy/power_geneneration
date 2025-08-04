@@ -174,16 +174,65 @@ This optimization model is used in:
 3. **Economic analysis**: Evaluating the cost impact of different demand scenarios
 4. **Capacity planning**: Assessing the need for new generation capacity
 
-## Implementation Notes
+## Implementation Architecture
 
-To solve this MILP problem, you can use:
-- **Python**: PuLP, Gurobi, CPLEX, or OR-Tools
-- **MATLAB**: intlinprog or Optimization Toolbox
-- **Julia**: JuMP with various solvers
-- **GAMS**: For large-scale industrial applications
+This project is organized into three main modules:
 
-The model scales well up to hundreds of generators and can incorporate additional constraints such as:
-- Ramping limits (how fast plants can change output)
-- Transmission constraints
-- Environmental emissions limits
-- Reserve requirements for system reliability
+### 1. Feature Builder (`src/feature_builder/`)
+Handles feature engineering for demand forecasting:
+- Temporal features (hour, day, seasonality patterns)
+- Weather transformations (temperature, light, rainfall)
+- Lag features and rolling statistics
+- Interaction features between weather and time
+
+### 2. Forecaster (`src/forecaster/`)
+Implements demand forecasting using PyTorch Forecasting's Temporal Fusion Transformer:
+- Quantile regression for probabilistic predictions (10th, 50th, 90th percentiles)
+- 24-hour ahead forecasting with confidence intervals
+- Attention mechanisms for interpretability
+- Handles both known future inputs (weather) and unknown features
+
+### 3. Optimizer (`src/optimizer/`)
+Solves the power generation scheduling problem using Pyomo:
+- **Deterministic optimization**: Basic MILP with fixed demand
+- **Robust optimization**: Handles demand uncertainty using Bertsimas-Sim approach
+- **Stochastic optimization**: Multiple scenario optimization with expected value
+- Integrates seamlessly with forecaster's confidence intervals
+
+## Usage Example
+
+```python
+from src.feature_builder import FeatureBuilder
+from src.forecaster import DemandForecaster
+from src.optimizer import PowerOptimizer
+
+# 1. Feature Engineering
+fb = FeatureBuilder()
+features_df = fb.fit_transform(raw_data)
+
+# 2. Demand Forecasting
+forecaster = DemandForecaster()
+train_loader, val_loader = forecaster.prepare_data(features_df)
+forecaster.train(train_loader, val_loader)
+next_day_forecast = forecaster.predict_next_day(current_data)
+
+# 3. Power Optimization
+plants = {
+    1: {'name': 'Plant 1', 'cost': 5, 'min_capacity': 20, 'max_capacity': 100},
+    2: {'name': 'Plant 2', 'cost': 4, 'min_capacity': 30, 'max_capacity': 150},
+    3: {'name': 'Plant 3', 'cost': 3, 'min_capacity': 40, 'max_capacity': 200}
+}
+
+optimizer = PowerOptimizer(plants)
+result = optimizer.optimize_robust(next_day_forecast, robustness_parameter=0.2)
+result.plot_schedule()
+```
+
+## Requirements
+
+- Python 3.8+
+- PyTorch & PyTorch Lightning
+- pytorch-forecasting
+- Pyomo with solver (GLPK, Gurobi, or CPLEX)
+- pandas, numpy, scikit-learn
+- matplotlib for visualization
