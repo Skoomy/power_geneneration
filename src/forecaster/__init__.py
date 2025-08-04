@@ -7,7 +7,7 @@ This module implements:
 - Next-day demand forecasting
 """
 
-from .model import TemporalFusionTransformer
+from .model import TFTDemandModel
 from .trainer import DemandForecaster
 
-__all__ = ['TemporalFusionTransformer', 'DemandForecaster']
+__all__ = ['TFTDemandModel', 'DemandForecaster']

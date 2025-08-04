@@ -1,0 +1,145 @@
+version: '3.8'
+
+services:
+  # Main application service
+  power_generation_app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: power_generation_main
+    volumes:
+      # Mount source code for development
+      - ../src:/app/src
+      - ../data:/app/data
+      - ../outputs:/app/outputs
+      - ../models:/app/models
+      - ../logs:/app/logs
+      # Mount Jupyter notebooks if created
+      - ../notebooks:/app/notebooks
+    ports:
+      - "8888:8888"  # Jupyter
+      - "8080:8080"  # Web interface (if implemented)
+      - "5000:5000"  # API service (if implemented)
+    environment:
+      - PYTHONPATH=/app
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=power_generation_token
+    command: >
+      bash -c "
+        echo 'Starting Power Generation Framework...' &&
+        python -c 'import src; print(\"Modules imported successfully\")' &&
+        echo 'Starting Jupyter Lab...' &&
+        jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --token=power_generation_token
+      "
+    restart: unless-stopped
+    networks:
+      - power_gen_network
+
+  # Development service for interactive work
+  power_generation_dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: power_generation_dev
+    volumes:
+      - ../:/app
+    environment:
+      - PYTHONPATH=/app
+    command: tail -f /dev/null  # Keep container running for exec commands
+    restart: unless-stopped
+    networks:
+      - power_gen_network
+    profiles:
+      - dev
+
+  # Training service for batch jobs
+  power_generation_training:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: power_generation_training
+    volumes:
+      - ../src:/app/src
+      - ../data:/app/data
+      - ../outputs:/app/outputs
+      - ../models:/app/models
+      - ../logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - CUDA_VISIBLE_DEVICES=0  # Set to -1 for CPU only
+    command: >
+      bash -c "
+        echo 'Training service ready. Use docker exec to run training scripts.' &&
+        tail -f /dev/null
+      "
+    restart: unless-stopped
+    networks:
+      - power_gen_network
+    profiles:
+      - training
+    # Uncomment the following lines if you have NVIDIA GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Optional: Database service for storing results
+  postgres_db:
+    image: postgres:14
+    container_name: power_generation_db
+    environment:
+      - POSTGRES_DB=power_generation
+      - POSTGRES_USER=power_user
+      - POSTGRES_PASSWORD=power_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../sql:/docker-entrypoint-initdb.d  # If you have SQL scripts
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - power_gen_network
+    profiles:
+      - db
+
+  # Optional: Redis for caching and task queue
+  redis_cache:
+    image: redis:7-alpine
+    container_name: power_generation_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - power_gen_network
+    profiles:
+      - cache
+
+  # Optional: Monitoring with Grafana (for production)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: power_generation_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - power_gen_network
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+  redis_data:
+  grafana_data:
+
+networks:
+  power_gen_network:
+    driver: bridge
