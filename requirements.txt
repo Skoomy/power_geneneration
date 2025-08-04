@@ -1,0 +1,27 @@
+# Core dependencies
+pandas>=1.5.0
+numpy>=1.21.0
+scikit-learn>=1.1.0
+
+# Deep Learning
+torch>=1.12.0
+pytorch-forecasting>=0.10.0
+pytorch-lightning>=1.8.0
+
+# Optimization (for future optimizer module)
+pulp>=2.7.0
+cvxpy>=1.3.0
+scipy>=1.9.0
+
+# Utilities
+jupyter>=1.0.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+plotly>=5.10.0
+
+# Data handling
+pyarrow>=9.0.0
+h5py>=3.7.0
+
+# Optional: GPU support (uncomment if needed)
+# torch[cuda]
